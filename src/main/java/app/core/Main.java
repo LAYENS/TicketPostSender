@@ -6,9 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -48,7 +50,13 @@ public class Main {
         //Достаем список
         ExcelReader reader = new ExcelReader(excelFile);
         List<Map<String,String>> rows = reader.readAllRows();
-        log.info("найдено {} строк", rows);
+        log.info("найдено {} строк", rows.size());
+
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(20))
+                .build();
+
+        //Управление запросами с помощью утилиты
     }
 
 }
