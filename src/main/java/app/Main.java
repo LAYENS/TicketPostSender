@@ -35,6 +35,7 @@ public class Main {
         try (InputStream stream = Files.newInputStream(cfgFile)) {
             properties.load(stream);
         }
+
         //Достанем данные для работы
         String publicId = properties.getProperty("publicId");
         String apiSecret = properties.getProperty("apiSecret");
@@ -44,6 +45,7 @@ public class Main {
         int requestPerSeconds = Integer.parseInt(properties.getProperty("requestPerSeconds"));
         int maxRetries = Integer.parseInt(properties.getProperty("maxRetries"));
         int initialRetryMillis = Integer.parseInt(properties.getProperty("initialRetryMillis"));
+
         //Файлы логов
         String successLog = properties.getProperty("successLog");
         String failedLog = properties.getProperty("failedLog");
