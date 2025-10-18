@@ -24,21 +24,25 @@ public class ExcelReader {
         List<Map<String,String>> list = new ArrayList<>();
         try (InputStream stream = Files.newInputStream(Paths.get(excelFile));
              Workbook workbook = new HSSFWorkbook(stream)) {
+
             Sheet sheet = workbook.getSheetAt(0);
             Iterator<Row> rows = sheet.iterator();
             if (!rows.hasNext()) return list;
             Row header = rows.next();
             List<String> cols = new ArrayList<>();
             for(Cell cell: header) cols.add(cell.getStringCellValue().trim());
+
             //Бежим строкам
             while (rows.hasNext()) {
                 Row row = rows.next();
                 if (isRowEmpty(row)) continue;
                 Map<String, String> map = new HashMap<>();
+
                 //Достаем каждую ячейку и обрабатываем ее
                 for (int i = 0; i < cols.size(); i++) {
                     Cell cell = row.getCell(i);
                     String value = "";
+
                     //Проверка на типы данных в ячейке
                     if (cell != null) {
                         if (cell.getCellType() == CellType.STRING){
