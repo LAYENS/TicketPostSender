@@ -1,10 +1,11 @@
 package app.reader;
 
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -23,7 +24,7 @@ public class ExcelReader {
     public List<Map<String, String>> readAllRows() throws IOException {
         List<Map<String,String>> list = new ArrayList<>();
         try (InputStream stream = Files.newInputStream(Paths.get(excelFile));
-             Workbook workbook = new HSSFWorkbook(stream)) {
+             Workbook workbook = new XSSFWorkbook(stream)) {
 
             Sheet sheet = workbook.getSheetAt(0);
             Iterator<Row> rows = sheet.iterator();
@@ -43,21 +44,30 @@ public class ExcelReader {
                     Cell cell = row.getCell(i);
                     String value = "";
 
-                    //Проверка на типы данных в ячейке
+                    // Проверка на типы данных в ячейке
                     if (cell != null) {
-                        if (cell.getCellType() == CellType.STRING){
-                            value = cell.getStringCellValue().trim();
-                        } else if (cell.getCellType() == CellType.NUMERIC) {
-                            if (DateUtil.isCellDateFormatted(cell)) {
-                                value = cell.getLocalDateTimeCellValue().toLocalDate().toString();
-                            } else {
-                                value = Double.toString(cell.getNumericCellValue());
+                        switch (cell.getCellType()) {
+                            case STRING -> {
+                                value = cell.getStringCellValue().trim();
                             }
-                        } else if (cell.getCellType() == CellType.BOOLEAN) {
-                            value = Boolean.toString(cell.getBooleanCellValue());
-                        } else {
-                            cell.setCellType(CellType.STRING);
-                            value = cell.getStringCellValue().trim();
+                            case NUMERIC -> {
+                                if (DateUtil.isCellDateFormatted(cell)) {
+                                    // Если это дата — сохраняем в ISO-формате (YYYY-MM-DD)
+                                    value = cell.getLocalDateTimeCellValue().toLocalDate().toString();
+                                } else {
+                                    // Число — сохраняем без экспоненциальной записи
+                                    BigDecimal bd = BigDecimal.valueOf(cell.getNumericCellValue());
+                                    value = bd.stripTrailingZeros().toPlainString();
+                                }
+                            }
+                            case BOOLEAN -> {
+                                value = Boolean.toString(cell.getBooleanCellValue());
+                            }
+                            default -> {
+                                // Принудительно как текст
+                                cell.setCellType(CellType.STRING);
+                                value = cell.getStringCellValue().trim();
+                            }
                         }
                     }
                     map.put(cols.get(i), value != null ? value.trim() : "");

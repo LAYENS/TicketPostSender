@@ -1,6 +1,7 @@
 package app.builder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Map;
@@ -22,35 +23,34 @@ public class BuilderJson {
         ObjectNode root = mapper.createObjectNode();
         ObjectNode data = mapper.createObjectNode();
 
-        data.put("OrganizationInn", getData(row, "OrganizationInn"));
-        data.put("TaxationSystem", getData(row, "TaxationSystem"));
-        data.put("CorrectionReceiptType", getData(row, "CorrectionReceiptType"));
+
+        data.put("organizationInn", getData(row, "OrganizationInn"));
+        data.put("taxationSystem", (int) Double.parseDouble(getData(row, "TaxationSystem")));
+        data.put("correctionReceiptType", (int) Double.parseDouble(getData(row, "CorrectionReceiptType")));
 
         ObjectNode cause = mapper.createObjectNode();
-        cause.put("CorrectionDate", getData(row, "CorrectionDate"));
-        cause.put("CorrectionDate", getData(row, "CorrectionDate"));
+        cause.put("correctionDate", getData(row, "CorrectionDate"));
+        cause.put("correctionNumber", getData(row, "CorrectionNumber"));
         data.set("CauseCorrection", cause);
 
         ObjectNode amounts = mapper.createObjectNode();
-        double total = parseDouble(row.get("Total"), 0.0);
-        amounts.put("Total", total);
-        data.set("Amounts", amounts);
+        double total = parseDouble(row.get("Amounts"), 0.0);
+        amounts.put("electronic", total);
+        data.set("amounts", amounts);
 
-        //Дополнительные данные
-        putIfExist(data, row, "PaymentPlace");
-        putIfExist(data, row, "PaymentAddress");
-        if (row.containsKey("IsInternetPayment")) {
-            data.put("IsInternetPayment", Boolean.parseBoolean(getData(row, "IsInternetPayment")));
-        }
-        //Опциональные поля
-        if (row.containsKey("Items") && !getData(row, "Items").isEmpty()) {
-            try {
-                var itemsNode = mapper.readTree(getData(row, "Items"));
-                data.set("Items", itemsNode);
-            } catch (Exception ignored) {}
-        }
+        ArrayNode itemsArray = mapper.createArrayNode();
+        ObjectNode item = mapper.createObjectNode();
+        item.put("label", getData(row, "Label"));
+        item.put("price", getData(row, "Price"));
+        item.put("quantity", getData(row, "Quantity"));
+        item.put("amount", getData(row, "Amount"));
+        item.put("correctionType", (int) Double.parseDouble(getData(row, "CorrectionType")));
+        item.put("paymentPlace", getData(row, "PaymentPlace"));
+        item.put("paymentAddress", getData(row, "PaymentAddress"));
+        itemsArray.add(item);
+        data.set("items", itemsArray);
 
-        root.set("CorrectionReceiptData", data);
+        root.set("correctionReceiptData", data);
         return mapper.writeValueAsString(root);
     }
 
